@@ -17,14 +17,16 @@ export interface AppDeps {
   sql: Sql;
   jwtSecret: string;
   audiosDir: string;
+  thumbnailsDir: string;
   downloader: Downloader;
   loginGuard?: RetryGuard;
 }
 
 const AUDIO_PATH = /^\/audio\/(\d+)\.opus$/;
+const THUMBNAIL_PATH = /^\/thumbnail\/(\d+)\.webp$/;
 
 export function createFetchHandler(deps: AppDeps) {
-  const { sql, jwtSecret, audiosDir, downloader } = deps;
+  const { sql, jwtSecret, audiosDir, thumbnailsDir, downloader } = deps;
   const loginGuard = deps.loginGuard ?? new RetryGuard();
 
   function authenticate(req: Request): TokenPayload {
@@ -104,6 +106,7 @@ export function createFetchHandler(deps: AppDeps) {
     `;
     const audioId = rows[0]!.id;
     const outputPath = `${audiosDir}/${audioId}.opus`;
+    const thumbnailPath = `${thumbnailsDir}/${audioId}.webp`;
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
@@ -111,12 +114,18 @@ export function createFetchHandler(deps: AppDeps) {
         const send = (event: object) =>
           controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`));
         try {
-          await downloader.download(url, outputPath, send);
+          await downloader.download(url, outputPath, thumbnailPath, send);
+          // The thumbnail is best-effort: store the local /thumbnail url only when the
+          // .webp actually made it to disk.
+          if (await Bun.file(thumbnailPath).exists()) {
+            await sql`UPDATE audio SET thumbnail = ${`/thumbnail/${audioId}.webp`} WHERE id = ${audioId}`;
+          }
           send({ progress: 100, estimated: "0s", id: audioId, title });
         } catch (error) {
           console.error("download failed", error);
           await sql`DELETE FROM audio WHERE id = ${audioId}`;
           await unlink(outputPath).catch(() => {});
+          await unlink(thumbnailPath).catch(() => {});
           send({ error: "DownloadFailed" });
         } finally {
           controller.close();
@@ -139,11 +148,22 @@ export function createFetchHandler(deps: AppDeps) {
     });
   }
 
+  // GET /thumbnail/{id}.webp — serves the stored webp thumbnail for an audio
+  async function handleThumbnailFile(req: Request, id: string): Promise<Response> {
+    authenticate(req);
+    const rows: AudioRow[] = await sql`SELECT id FROM audio WHERE id = ${Number(id)}`;
+    const file = Bun.file(`${thumbnailsDir}/${id}.webp`);
+    if (rows.length === 0 || !(await file.exists())) throw ApiError.notFound();
+    return new Response(file, {
+      headers: { "content-type": "image/webp" },
+    });
+  }
+
   async function handleList(req: Request, params: URLSearchParams): Promise<Response> {
     authenticate(req);
     const { skip, limit } = parsePagination(params);
     const rows: AudioRow[] = await sql`
-      SELECT id, title, url FROM audio ORDER BY id DESC OFFSET ${skip} LIMIT ${limit}
+      SELECT id, title, url, thumbnail FROM audio ORDER BY id DESC OFFSET ${skip} LIMIT ${limit}
     `;
     return Response.json(rows);
   }
@@ -185,6 +205,8 @@ export function createFetchHandler(deps: AppDeps) {
       if (req.method === "GET" && pathname === "/preview") return await handlePreview(req, url.searchParams);
       const audioMatch = req.method === "GET" ? pathname.match(AUDIO_PATH) : null;
       if (audioMatch) return await handleAudioFile(req, audioMatch[1]!);
+      const thumbnailMatch = req.method === "GET" ? pathname.match(THUMBNAIL_PATH) : null;
+      if (thumbnailMatch) return await handleThumbnailFile(req, thumbnailMatch[1]!);
       throw ApiError.notFound();
     } catch (error) {
       if (error instanceof ApiError) return errorResponse(error);

@@ -2,15 +2,24 @@
 # yt-dlp stub used by the isolated test environments (no network, deterministic).
 # URLs containing "notfound" behave as an unresolvable video.
 
-# Scan args for the search term (ytsearchN:...) and the -o output template.
+# Scan args for the search term (ytsearchN:...) and the -o output templates. There
+# may be two -o flags: the audio template and a "thumbnail:<template>" one.
 search=""
 out=""
+thumb_out=""
+skip_download=""
 prev=""
 for arg in "$@"; do
   case "$arg" in
     ytsearch*:*) search="$arg" ;;
+    --skip-download) skip_download="1" ;;
   esac
-  if [ "$prev" = "-o" ]; then out="$arg"; fi
+  if [ "$prev" = "-o" ]; then
+    case "$arg" in
+      thumbnail:*) thumb_out=${arg#thumbnail:} ;;
+      *) out="$arg" ;;
+    esac
+  fi
   prev="$arg"
 done
 
@@ -47,11 +56,18 @@ if [ "$out" = "-" ]; then
   exit 0
 fi
 
-# download mode: locate the -o output template and materialize the opus file
-out=$(printf '%s' "$out" | sed 's/%(ext)s/opus/')
+# download mode: materialize the opus file (unless --skip-download, used by the
+# thumbnail backfill) plus its converted webp thumbnail.
+if [ "$skip_download" != "1" ] && [ -n "$out" ]; then
+  out=$(printf '%s' "$out" | sed 's/%(ext)s/opus/')
+  echo "[download]   0.0% of 1.00MiB at 1.00MiB/s ETA 00:02"
+  echo "[download]  50.0% of 1.00MiB at 1.00MiB/s ETA 00:01"
+  echo "[download] 100.0% of 1.00MiB at 1.00MiB/s ETA 00:00"
+  printf 'stub-opus-data' > "$out"
+fi
 
-echo "[download]   0.0% of 1.00MiB at 1.00MiB/s ETA 00:02"
-echo "[download]  50.0% of 1.00MiB at 1.00MiB/s ETA 00:01"
-echo "[download] 100.0% of 1.00MiB at 1.00MiB/s ETA 00:00"
-printf 'stub-opus-data' > "$out"
+if [ -n "$thumb_out" ]; then
+  webp_out=$(printf '%s' "$thumb_out" | sed 's/%(ext)s/webp/')
+  printf 'stub-webp-data' > "$webp_out"
+fi
 exit 0

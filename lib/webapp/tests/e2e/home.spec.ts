@@ -32,6 +32,18 @@ test("downloading a video adds it to the list and closes the modal", async ({ pa
   await expect(page.getByTestId("audio-list")).toContainText("Stub Video");
 });
 
+test("downloaded audio shows its thumbnail", async ({ page }) => {
+  await page.getByTestId("open-download").click();
+  await page.getByTestId("download-url").fill("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+  await page.getByTestId("submit-download").click();
+  await expect(page.getByTestId("download-modal")).toHaveCount(0, { timeout: 30_000 });
+
+  const thumbnail = page.getByTestId(/^thumbnail-/).first();
+  await expect(thumbnail).toBeVisible();
+  // the protected webp is fetched with the bearer token and shown via an object URL
+  await expect(thumbnail.locator("img")).toHaveAttribute("src", /^blob:/);
+});
+
 test("playing an audio reveals the play bar", async ({ page }) => {
   await page.getByTestId("open-download").click();
   await page.getByTestId("download-url").fill("https://www.youtube.com/watch?v=dQw4w9WgXcQ");

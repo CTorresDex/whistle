@@ -11,8 +11,11 @@ list(endpoint="/list")
     | Infinite scroll that fetches existing audios
     each audio in audios
         row
-            title.left  {audio.title}
-            title.right: button(icon="play", (click)="player.play(audio)")
+            .left
+                img {video.thumbnail}
+                title {video.title}
+            .right
+                button(icon="play", (click)="player.play(audio)")
 
 modal#download-modal
     | Inputs and buttons are disabled while downloading

@@ -78,7 +78,15 @@ export function parseSearchResults(raw: string): YoutubeSearchResult[] {
 
 export interface Downloader {
   fetchTitle(url: string): Promise<string>;
-  download(url: string, outputPath: string, onProgress: (p: DownloadProgress) => void): Promise<void>;
+  download(
+    url: string,
+    outputPath: string,
+    thumbnailPath: string,
+    onProgress: (p: DownloadProgress) => void,
+  ): Promise<void>;
+  // Fetches only the webp thumbnail (no audio) to backfill already-downloaded audios.
+  // Resolves true when the thumbnail was stored, false when none is available.
+  downloadThumbnail(url: string, thumbnailPath: string): Promise<boolean>;
   // Searches YouTube via yt-dlp and returns up to 50 flat results
   search(query: string): Promise<YoutubeSearchResult[]>;
   // Streams a video's opus audio directly (no persistent storage)
@@ -106,15 +114,34 @@ export class YtDlpDownloader implements Downloader {
     }
   }
 
-  // outputPath must end with .opus; yt-dlp receives it as an "{base}.%(ext)s" template
+  // outputPath must end with .opus, thumbnailPath with .webp; yt-dlp receives each as an
+  // "{base}.%(ext)s" template. The thumbnail is written next to the opus and converted to
+  // webp via the "thumbnail:" output-type prefix so it lands in the thumbnails disk.
   async download(
     url: string,
     outputPath: string,
+    thumbnailPath: string,
     onProgress: (p: DownloadProgress) => void,
   ): Promise<void> {
     const template = outputPath.replace(/\.opus$/, ".%(ext)s");
+    const thumbTemplate = thumbnailPath.replace(/\.webp$/, ".%(ext)s");
     const proc = Bun.spawn(
-      [this.bin, "-x", "--audio-format", "opus", "--no-playlist", "--newline", "-o", template, url],
+      [
+        this.bin,
+        "-x",
+        "--audio-format",
+        "opus",
+        "--write-thumbnail",
+        "--convert-thumbnails",
+        "webp",
+        "--no-playlist",
+        "--newline",
+        "-o",
+        template,
+        "-o",
+        `thumbnail:${thumbTemplate}`,
+        url,
+      ],
       { stdout: "pipe", stderr: "pipe" },
     );
 
@@ -138,6 +165,28 @@ export class YtDlpDownloader implements Downloader {
     if (!(await Bun.file(outputPath).exists())) {
       throw new Error(`yt-dlp finished but ${outputPath} was not created`);
     }
+  }
+
+  // Thumbnail-only fetch used by the backfill: --skip-download avoids re-extracting
+  // the audio, and the "thumbnail:" output prefix writes the converted webp in place.
+  async downloadThumbnail(url: string, thumbnailPath: string): Promise<boolean> {
+    const thumbTemplate = thumbnailPath.replace(/\.webp$/, ".%(ext)s");
+    const proc = Bun.spawn(
+      [
+        this.bin,
+        "--skip-download",
+        "--write-thumbnail",
+        "--convert-thumbnails",
+        "webp",
+        "--no-playlist",
+        "-o",
+        `thumbnail:${thumbTemplate}`,
+        url,
+      ],
+      { stdout: "pipe", stderr: "pipe" },
+    );
+    await proc.exited;
+    return Bun.file(thumbnailPath).exists();
   }
 
   // GET /explore — first 50 youtube results for the terms, extract_flat: true

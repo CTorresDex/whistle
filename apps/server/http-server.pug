@@ -32,7 +32,10 @@ http-server(port=8080)
             username User's username
             
     endpoint.post(path="/download", auth="user")
-        | Given a youtube video, it downloads its audio using **yt-dlp** stores the opus file and adds it to the audios collection
+        | Given a youtube video, it downloads its audio using **yt-dlp** Then
+        | 1. Stores the opus file 
+        | 2. Stores the thumbnail 
+        | 3. Adds it to the audios collection with the local /thumbnail url
         arg#url.youtube-url
 
         throws#VideoNotFound
@@ -47,6 +50,12 @@ http-server(port=8080)
         route-param#id
 
         returns.file Returns the stored opus file
+    
+    endpoint.get(path="/thumbnail/{id}.webp", auth="user")
+        | Given an audio id, it serves the respective thumbnail file
+        route-param#id
+
+        returns.file Returns the stored thumbnail file
 
     endpoint.get(path="/list", auth="user")
         | List existing audios from newest to latest.

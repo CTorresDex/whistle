@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clearSession, getSession, type Session } from "@/lib/auth";
 import type { Audio } from "@/lib/types";
+import { AudioThumbnail } from "@/components/AudioThumbnail";
 import { DownloadModal } from "@/components/DownloadModal";
 import { Navbar } from "@/components/Navbar";
 import { usePlayer } from "@/components/Player";
@@ -103,7 +104,12 @@ export default function HomePage() {
       <ul data-testid="audio-list" className="divide-y divide-neutral-800">
         {audios.map((audio, i) => (
           <li key={audio.id} data-testid={`audio-row-${audio.id}`} className="flex items-center justify-between gap-4 py-3">
-            <span className="truncate text-left">{audio.title}</span>
+            <div className="flex min-w-0 items-center gap-3">
+              {audio.thumbnail && (
+                <AudioThumbnail id={audio.id} token={session.token} alt={audio.title} />
+              )}
+              <span className="truncate text-left">{audio.title}</span>
+            </div>
             <button
               data-testid={`play-${audio.id}`}
               onClick={() =>

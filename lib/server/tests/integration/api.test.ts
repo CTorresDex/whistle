@@ -121,6 +121,7 @@ describe("audio-station server API", () => {
       id: audioId,
       title: "Stub Video",
       url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      thumbnail: `/thumbnail/${audioId}.webp`,
     });
   });
 
@@ -132,6 +133,22 @@ describe("audio-station server API", () => {
 
   test("GET /audio/{id}.opus for unknown id returns 404", async () => {
     const res = await get("/audio/999999.opus", token);
+    expect(res.status).toBe(404);
+  });
+
+  test("GET /thumbnail/{id}.webp serves the stored thumbnail", async () => {
+    const res = await get(`/thumbnail/${audioId}.webp`, token);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("image/webp");
+    expect(await res.text()).toBe("stub-webp-data");
+  });
+
+  test("GET /thumbnail/{id}.webp requires authentication", async () => {
+    expect((await get(`/thumbnail/${audioId}.webp`)).status).toBe(401);
+  });
+
+  test("GET /thumbnail/{id}.webp for unknown id returns 404", async () => {
+    const res = await get("/thumbnail/999999.webp", token);
     expect(res.status).toBe(404);
   });
 

@@ -18,10 +18,12 @@ function resolveJwtSecret(): string {
 const databaseUrl =
   process.env.DATABASE_URL ?? "postgres://audiostation:audiostation@db:5432/audiostation";
 const audiosDir = process.env.AUDIOS_DIR ?? "/audios";
+const thumbnailsDir = process.env.THUMBNAILS_DIR ?? "/thumbnails";
 const ytdlpBin = process.env.YTDLP_BIN ?? "yt-dlp";
 const port = Number(process.env.PORT ?? 8080);
 
 mkdirSync(audiosDir, { recursive: true });
+mkdirSync(thumbnailsDir, { recursive: true });
 
 const sql = createSql(databaseUrl);
 await waitForDb(sql);
@@ -34,6 +36,7 @@ const server = Bun.serve({
     sql,
     jwtSecret: resolveJwtSecret(),
     audiosDir,
+    thumbnailsDir,
     downloader: new YtDlpDownloader(ytdlpBin),
   }),
 });

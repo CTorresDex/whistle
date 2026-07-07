@@ -21,6 +21,7 @@ services:
       DATABASE_URL: postgres://audiostation:audiostation@db:5432/audiostation
     volumes:
       - audios:/audios
+      - thumbnails:/thumbnails
       - data:/data
     depends_on:
       db:
@@ -34,4 +35,5 @@ services:
 volumes:
   db-data:
   audios:
+  thumbnails:
   data:

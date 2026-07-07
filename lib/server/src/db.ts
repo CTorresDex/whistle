@@ -34,6 +34,8 @@ export async function migrate(sql: Sql): Promise<void> {
       url TEXT NOT NULL
     )
   `;
+  // entity#audio thumbnails.url — local /thumbnail url, set once the .webp is stored
+  await sql`ALTER TABLE audio ADD COLUMN IF NOT EXISTS thumbnail TEXT`;
 }
 
 export interface UserRow {
@@ -46,4 +48,5 @@ export interface AudioRow {
   id: number;
   title: string;
   url: string;
+  thumbnail: string | null;
 }
