@@ -164,7 +164,7 @@ When `route` is omitted it defaults to `/[name]`. A page's body describes its co
 - **Events** — `click="[target]::[method](...)"` wires interactions to named elements or actions; `&` targets the enclosing element (`&::close`).
 - **`modal#[name]`** — an overlay opened/closed via `::open` / `::close`; its prose defines its interaction rules.
 - **`action#[name](args=[...])`** — a named client-side behavior defined by prose, invocable from events as `action::[name](...)`.
-- **Presentation/state qualifiers** — dots express layout or state, e.g. `.align-left`, `.align-right`, `.hidden` (open set).
+- **Presentation/state qualifiers** — dots express layout or state, e.g. `.left`, `.right`, `.hidden` (open set).
 - **Attributes** carry component config: `icon="play"`, `redirect-to="/signup"`, etc.
 - **Literal label text** on buttons/spans is the user-facing copy, in the product's language.
 
