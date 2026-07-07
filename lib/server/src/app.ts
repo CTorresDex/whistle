@@ -7,6 +7,7 @@ import { RetryGuard } from "./retry-guard";
 import type { Downloader } from "./download";
 import {
   isValidPassword,
+  isValidUrl,
   isValidUsername,
   isValidYoutubeUrl,
   parsePagination,
@@ -147,6 +148,29 @@ export function createFetchHandler(deps: AppDeps) {
     return Response.json(rows);
   }
 
+  // GET /explore — searches youtube for the given terms via yt-dlp
+  async function handleExplore(req: Request, params: URLSearchParams): Promise<Response> {
+    authenticate(req);
+    const search = (params.get("search") ?? "").trim();
+    if (search.length === 0) {
+      throw ApiError.validation("search must be a non-blank string");
+    }
+    const results = await downloader.search(search);
+    return Response.json(results);
+  }
+
+  // GET /preview — streams the opus audio directly from youtube without storing it
+  async function handlePreview(req: Request, params: URLSearchParams): Promise<Response> {
+    authenticate(req);
+    const url = params.get("url") ?? "";
+    if (!isValidUrl(url)) throw ApiError.validation("url must be a valid url");
+    // Resolve metadata first so an unresolvable video is a plain VideoNotFound 404
+    await downloader.fetchTitle(url);
+    return new Response(downloader.previewStream(url), {
+      headers: { "content-type": "audio/opus" },
+    });
+  }
+
   return async function fetchHandler(req: Request, server: Server): Promise<Response> {
     const url = new URL(req.url);
     const { pathname } = url;
@@ -157,6 +181,8 @@ export function createFetchHandler(deps: AppDeps) {
       if (req.method === "POST" && pathname === "/login") return await handleLogin(req, ip);
       if (req.method === "POST" && pathname === "/download") return await handleDownload(req);
       if (req.method === "GET" && pathname === "/list") return await handleList(req, url.searchParams);
+      if (req.method === "GET" && pathname === "/explore") return await handleExplore(req, url.searchParams);
+      if (req.method === "GET" && pathname === "/preview") return await handlePreview(req, url.searchParams);
       const audioMatch = req.method === "GET" ? pathname.match(AUDIO_PATH) : null;
       if (audioMatch) return await handleAudioFile(req, audioMatch[1]!);
       throw ApiError.notFound();

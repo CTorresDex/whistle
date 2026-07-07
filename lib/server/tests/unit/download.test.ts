@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { formatDuration, parseProgressLine } from "../../src/download";
+import { formatDuration, parseProgressLine, parseSearchResults } from "../../src/download";
 
 describe("formatDuration (type#duration)", () => {
   test("formats seconds, minutes and hours", () => {
@@ -31,5 +31,50 @@ describe("parseProgressLine", () => {
     expect(parseProgressLine("[youtube] Extracting URL")).toBeNull();
     expect(parseProgressLine("[download] Destination: /audios/1.opus")).toBeNull();
     expect(parseProgressLine("")).toBeNull();
+  });
+});
+
+describe("parseSearchResults (type#youtube-search)", () => {
+  test("maps flat-playlist entries to youtube-search results", () => {
+    const raw = JSON.stringify({
+      entries: [
+        {
+          id: "vid1",
+          title: "First",
+          duration: 200,
+          url: "https://www.youtube.com/watch?v=vid1",
+          thumbnails: [{ url: "https://i.ytimg.com/vi/vid1/default.jpg" }, { url: "https://i.ytimg.com/vi/vid1/hq.jpg" }],
+        },
+        { id: "vid2", title: "Second", duration: 75 },
+      ],
+    });
+    expect(parseSearchResults(raw)).toEqual([
+      {
+        title: "First",
+        url: "https://www.youtube.com/watch?v=vid1",
+        duration: "3m20s",
+        thumbnail: "https://i.ytimg.com/vi/vid1/hq.jpg",
+      },
+      {
+        title: "Second",
+        url: "https://www.youtube.com/watch?v=vid2",
+        duration: "1m15s",
+        thumbnail: null,
+      },
+    ]);
+  });
+
+  test("drops entries without a title or resolvable url and handles missing entries", () => {
+    const raw = JSON.stringify({
+      entries: [
+        { id: "ok", title: "Keep", duration: 10 },
+        { title: "NoUrl" },
+        { id: "nope" },
+      ],
+    });
+    const results = parseSearchResults(raw);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.title).toBe("Keep");
+    expect(parseSearchResults(JSON.stringify({}))).toEqual([]);
   });
 });

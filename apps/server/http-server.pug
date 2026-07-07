@@ -53,4 +53,14 @@ http-server(port=8080)
         arg#pagination
 
         returns.array List of paginated existing audios
-            
+    
+    endpoint.get(path="/explore", auth="user")
+        | Searches in youtube the first 50 results via yt-dlp for specific terms and returns the list of the videos
+
+        returns.youtube-search.array
+            | List of paginared existing videos, extract_flat: true
+
+    endpoint.get(path="/preview", auth="user")
+        arg#url
+
+        reutrns.file Returns the .opus file directly from youtube without storing it in persistent storage

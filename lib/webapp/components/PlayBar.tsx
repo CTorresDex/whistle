@@ -1,30 +1,31 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Audio } from "@/lib/types";
 import { PauseIcon, PlayIcon } from "./icons";
 
 interface Props {
-  audio: Audio | null;
+  // API path of the opus source (e.g. /api/audio/1.opus or /api/preview?url=...)
+  src: string | null;
+  title: string;
   token: string;
 }
 
-// play-bar.hidden — hidden until an audio is played; streams the audio from
-// /audio/{id}.opus and shows playback progress plus a play/pause toggle.
-export function PlayBar({ audio, token }: Props) {
+// play-bar.hidden — hidden until something is played; streams the opus source and
+// shows playback progress plus a play/pause toggle.
+export function PlayBar({ src, title, token }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (!audio) return;
+    if (!src) return;
     let objectUrl: string | null = null;
     let cancelled = false;
     setProgress(0);
     setPaused(false);
     (async () => {
       try {
-        const res = await fetch(`/api/audio/${audio.id}.opus`, {
+        const res = await fetch(src, {
           headers: { authorization: `Bearer ${token}` },
         });
         if (!res.ok || cancelled) return;
@@ -42,9 +43,9 @@ export function PlayBar({ audio, token }: Props) {
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [audio, token]);
+  }, [src, token]);
 
-  if (!audio) return null;
+  if (!src) return null;
 
   function toggle() {
     const element = audioRef.current;
@@ -79,7 +80,7 @@ export function PlayBar({ audio, token }: Props) {
         {paused ? <PlayIcon /> : <PauseIcon />}
       </button>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm">{audio.title}</p>
+        <p className="truncate text-sm">{title}</p>
         <div className="mt-1 h-1.5 w-full overflow-hidden rounded bg-neutral-800">
           <div className="h-full bg-emerald-500" style={{ width: `${progress}%` }} />
         </div>

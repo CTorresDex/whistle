@@ -135,6 +135,50 @@ describe("audio-station server API", () => {
     expect(res.status).toBe(404);
   });
 
+  test("GET /explore requires authentication", async () => {
+    expect((await get("/explore?search=music")).status).toBe(401);
+  });
+
+  test("GET /explore validates a non-blank search term", async () => {
+    expect((await get("/explore", token)).status).toBe(400);
+    expect((await get("/explore?search=%20%20", token)).status).toBe(400);
+  });
+
+  test("GET /explore returns youtube-search results", async () => {
+    const res = await get("/explore?search=lofi", token);
+    expect(res.status).toBe(200);
+    const results = await res.json();
+    expect(Array.isArray(results)).toBe(true);
+    expect(results.length).toBeGreaterThan(0);
+    for (const video of results) {
+      expect(typeof video.title).toBe("string");
+      expect(typeof video.url).toBe("string");
+      expect(typeof video.duration).toBe("string");
+      expect(["string", "object"]).toContain(typeof video.thumbnail); // string or null
+    }
+    expect(results[0].title).toContain("lofi");
+  });
+
+  const previewUrl = (raw: string) => `/preview?url=${encodeURIComponent(raw)}`;
+
+  test("GET /preview requires authentication and a valid url", async () => {
+    expect((await get(previewUrl("https://youtu.be/dQw4w9WgXcQ"))).status).toBe(401);
+    expect((await get(previewUrl("not-a-url"), token)).status).toBe(400);
+  });
+
+  test("GET /preview throws VideoNotFound for unresolvable videos", async () => {
+    const res = await get(previewUrl("https://youtu.be/notfound1234"), token);
+    expect(res.status).toBe(404);
+    expect((await res.json()).error).toBe("VideoNotFound");
+  });
+
+  test("GET /preview streams the opus audio", async () => {
+    const res = await get(previewUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ"), token);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("audio/opus");
+    expect(await res.text()).toBe("stub-opus-data");
+  });
+
   // Must stay last: it exhausts the per-IP login retry budget for this client.
   test("login guard throws MaxAllowedRetriesExceeded after 5 failed retries", async () => {
     for (let i = 0; i < 5; i++) {

@@ -1,5 +1,10 @@
-navbar.align-right
-    button(click="download-modal::open")
+include ../components/play-bar.pug
+
+navbar
+    .align-left
+        include ../components/navbar-items
+    .align-right
+        button(click="download-modal::open")
 
 list(endpoint="/list")
     | Infinite scroll that fetches existing audios
@@ -7,14 +12,6 @@ list(endpoint="/list")
         row
             title.align-left  {audio.title}
             title.align-right: button(icon="play", click="action::play()")
-
-play-bar.hidden
-    progress-bar
-    
-    if paused
-        button(icon="play")
-    else
-        button(icon="pause")
 
 modal#download-modal
     | Inputs and buttons are disabled while downloading

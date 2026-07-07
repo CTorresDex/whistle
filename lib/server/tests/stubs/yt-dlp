@@ -2,6 +2,29 @@
 # yt-dlp stub used by the isolated test environments (no network, deterministic).
 # URLs containing "notfound" behave as an unresolvable video.
 
+# Scan args for the search term (ytsearchN:...) and the -o output template.
+search=""
+out=""
+prev=""
+for arg in "$@"; do
+  case "$arg" in
+    ytsearch*:*) search="$arg" ;;
+  esac
+  if [ "$prev" = "-o" ]; then out="$arg"; fi
+  prev="$arg"
+done
+
+# GET /explore — `yt-dlp -J --flat-playlist "ytsearchN:<query>"`
+if [ -n "$search" ]; then
+  query=$(printf '%s' "$search" | sed 's/^ytsearch[0-9]*://')
+  printf '{"entries":['
+  printf '{"id":"vid0001","title":"%s result 1","duration":200,"url":"https://www.youtube.com/watch?v=vid0001","thumbnails":[{"url":"https://i.ytimg.com/vi/vid0001/hq.jpg"}]},' "$query"
+  printf '{"id":"vid0002","title":"%s result 2","duration":75,"url":"https://www.youtube.com/watch?v=vid0002","thumbnails":[{"url":"https://i.ytimg.com/vi/vid0002/hq.jpg"}]}' "$query"
+  printf ']}\n'
+  exit 0
+fi
+
+# The video url is the last positional argument.
 for last in "$@"; do :; done
 url="$last"
 
@@ -12,18 +35,19 @@ case "$url" in
     ;;
 esac
 
+# Metadata fetch: `yt-dlp -J --no-playlist <url>`
 if [ "$1" = "-J" ]; then
   printf '{"title":"Stub Video"}\n'
   exit 0
 fi
 
+# GET /preview — extraction to stdout (`-o -`): emit the opus bytes directly.
+if [ "$out" = "-" ]; then
+  printf 'stub-opus-data'
+  exit 0
+fi
+
 # download mode: locate the -o output template and materialize the opus file
-out=""
-prev=""
-for arg in "$@"; do
-  if [ "$prev" = "-o" ]; then out="$arg"; fi
-  prev="$arg"
-done
 out=$(printf '%s' "$out" | sed 's/%(ext)s/opus/')
 
 echo "[download]   0.0% of 1.00MiB at 1.00MiB/s ETA 00:02"

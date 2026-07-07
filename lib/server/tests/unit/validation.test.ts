@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   isValidPassword,
+  isValidUrl,
   isValidUsername,
   isValidYoutubeUrl,
   parsePagination,
@@ -51,6 +52,22 @@ describe("youtube-url", () => {
     expect(isValidYoutubeUrl("https://www.youtube.com/watch")).toBe(false);
     expect(isValidYoutubeUrl("not a url")).toBe(false);
     expect(isValidYoutubeUrl("ftp://youtube.com/watch?v=dQw4w9WgXcQ")).toBe(false);
+  });
+});
+
+describe("url (type#url)", () => {
+  test("accepts http and https urls", () => {
+    expect(isValidUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ")).toBe(true);
+    expect(isValidUrl("http://example.com")).toBe(true);
+    expect(isValidUrl("https://youtu.be/abc123")).toBe(true);
+  });
+
+  test("rejects non-http protocols and malformed values", () => {
+    expect(isValidUrl("ftp://example.com")).toBe(false);
+    expect(isValidUrl("not a url")).toBe(false);
+    expect(isValidUrl("")).toBe(false);
+    expect(isValidUrl(42)).toBe(false);
+    expect(isValidUrl(undefined)).toBe(false);
   });
 });
 

@@ -1,0 +1,31 @@
+include ../components/play-bar.pug
+
+navbar
+    .align-left
+        include ../components/navbar-items
+    .center
+        form(endpoint="explore")
+            input#search.text(placeholder="¿Qué quieres escuchar hoy?")
+            button.submit(icon="search")
+
+list
+    | Show the list of videos after searching in the top bar
+    each video in videos
+        row
+            | The row will have a hidden progress download bar that will look exactly like a 2px border bottom
+            | this progress bar wont change the row size, only make visible the progress.
+            | After the download is complete, the bar must remain visible
+            .align-left
+                img {video.thumbnail}
+                title {video.title}
+            .align-right
+                button(icon="play", click="action::play(video.url)")
+                button(icon="download", click="action::download(video.url)")
+                    | Disabled when the download is in progress
+
+
+action#play(args=["url"])
+    | Stream play the audio from the /preview endpoint and makes the play-bar visible
+
+action#download(args=["url"])
+    | Calls the /download endpoint with the provided url and displays the progress bar in the downloading row

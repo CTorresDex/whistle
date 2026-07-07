@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { clearSession, getSession, type Session } from "@/lib/auth";
 import type { Audio } from "@/lib/types";
 import { DownloadModal } from "@/components/DownloadModal";
+import { Navbar } from "@/components/Navbar";
 import { PlayBar } from "@/components/PlayBar";
 import { PlayIcon, UploadIcon } from "@/components/icons";
 
@@ -88,7 +89,7 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 pb-28">
-      <nav className="flex items-center justify-end py-4">
+      <Navbar>
         <button
           data-testid="open-download"
           onClick={() => setModalOpen(true)}
@@ -97,7 +98,7 @@ export default function HomePage() {
         >
           <UploadIcon />
         </button>
-      </nav>
+      </Navbar>
 
       <ul data-testid="audio-list" className="divide-y divide-neutral-800">
         {audios.map((audio) => (
@@ -125,7 +126,11 @@ export default function HomePage() {
         onClose={() => setModalOpen(false)}
         onComplete={() => void refresh()}
       />
-      <PlayBar audio={playing} token={session.token} />
+      <PlayBar
+        src={playing ? `/api/audio/${playing.id}.opus` : null}
+        title={playing?.title ?? ""}
+        token={session.token}
+      />
     </main>
   );
 }

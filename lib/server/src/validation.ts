@@ -10,16 +10,21 @@ export function isValidPassword(value: unknown): value is string {
   return typeof value === "string" && value.length >= 6 && value.length <= 32;
 }
 
-// type#youtube-url.string — Valid mobile or web youtube url
-export function isValidYoutubeUrl(value: unknown): value is string {
+// type#url — Generic url (http/https)
+export function isValidUrl(value: unknown): value is string {
   if (typeof value !== "string") return false;
-  let url: URL;
   try {
-    url = new URL(value);
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
   } catch {
     return false;
   }
-  if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+}
+
+// type#youtube-url.url — Valid mobile or web youtube url
+export function isValidYoutubeUrl(value: unknown): value is string {
+  if (!isValidUrl(value)) return false;
+  const url = new URL(value);
   const host = url.hostname.toLowerCase();
   if (host === "youtu.be") {
     return /^\/[\w-]{6,}/.test(url.pathname);

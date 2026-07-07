@@ -16,7 +16,10 @@ type#access-token.string
 type#id.uint
     | Positive number, when used in databases / schemas it autoincrements
 
-type#youtube-url.string
+type#url
+    | Generic url
+
+type#youtube-url.url
     | Valid mobile or web youtube url
 
 type#duration.string
@@ -29,3 +32,10 @@ type#pagination.object
 
 type#text
     | Arbitrary non blank text, Min Length: 1
+
+type#youtube-search
+    | Result type of the yt-dlp video search
+    title.text
+    url.youtube-url
+    duration.duration
+    thumbnail.url.optional
