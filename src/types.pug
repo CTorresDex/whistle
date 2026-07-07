@@ -1,0 +1,31 @@
+type#name.string
+    | Min Length: 1
+    | Max Length: 32
+    | Allowed Characters: [a-z0-9]
+
+type#password.string
+    | Min Length: 6
+    | Max Length: 32
+
+type#access-token.string
+    | JWT with the following properties
+    ttl infinity
+    user_id.id
+    username
+
+type#id.uint
+    | Positive number, when used in databases / schemas it autoincrements
+
+type#youtube-url.string
+    | Valid mobile or web youtube url
+
+type#duration.string
+    | Time expressed in duration units, ex. 1h, 2h, 5m, 25s, etc...
+
+type#pagination.object
+    | Represents a pagination
+    skip.uint
+    limit.uint(min=1, max=50)
+
+type#text
+    | Arbitrary non blank text, Min Length: 1

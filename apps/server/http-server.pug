@@ -1,0 +1,56 @@
+http-server(port=8080)
+    endpoint.get(path="/health")
+        | Just a health check endpoint
+        returns.status 200
+
+    endpoint.post(path="/signup")
+        | Signs up a regular user, no confirmation currently
+        arg#username
+        arg#password
+
+        throws#UserAlreadyExist If username is already taken
+
+        returns.status 200
+    
+    endpoint.post(path="/login")
+        | Login regular user
+        arg#username
+        arg#password
+
+        guard
+            discriminator ip
+            max-retries 5
+            refresh-time 1h
+            
+            throws#MaxAllowedRetriesExceeded
+
+        throws#InvalidUsernameAndPassword
+
+        returns.json
+            token.access-token User's access token
+            user_id.id Users's id
+            username User's username
+            
+    endpoint.post(path="/download", auth="user")
+        | Given a youtube video, it downloads its audio using **yt-dlp** stores the opus file and adds it to the audios collection
+        arg#url.youtube-url
+
+        throws#VideoNotFound
+
+        returns.long-polling
+            | Streams the download progress
+            progress.uint
+            estimated.duration
+
+    endpoint.get(path="/audio/{id}.opus", auth="user")
+        | Given an audio id, it serves the respective opus file
+        route-param#id
+
+        returns.file Returns the stored opus file
+
+    endpoint.get(path="/list", auth="user")
+        | List existing audios from newest to latest.
+        arg#pagination
+
+        returns.array List of paginated existing audios
+            

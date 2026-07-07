@@ -1,0 +1,32 @@
+navbar.align-right
+    button(click="download-modal::open")
+
+list(endpoint="/list")
+    | Infinite scroll that fetches existing audios
+    each audio in audios
+        row
+            title.align-left  {audio.title}
+            title.align-right: button(icon="play", click="action::play()")
+
+play-bar.hidden
+    progress-bar
+    
+    if paused
+        button(icon="play")
+    else
+        button(icon="pause")
+
+modal#download-modal
+    | Inputs and buttons are disabled while downloading
+    | Progress bar is only visible when the download is in progress
+    | After the upload is complete, close the modal
+
+    form(endpoint="download")
+        input#url.youtube-url
+        button(click="&::close") Cancelar
+        button(icon="upload") Subir
+    
+    progress-bar
+
+action#play(args=["audio_id"])
+    | Stream play the audio from the /audio/{audio_id}.opus endpoint and makes the play-bar visible

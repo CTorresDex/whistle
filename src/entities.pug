@@ -1,0 +1,11 @@
+entity#user
+    | Represents an app user
+    id.id.pkey
+    username.username.unique.index
+    password.password.private Stored as bcrypt, 12 rounds
+
+entity#audio
+    | Represents a downloaded audio
+    id.id.pkey
+    title.text
+    url.youtube-url

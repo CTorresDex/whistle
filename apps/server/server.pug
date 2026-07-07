@@ -1,0 +1,14 @@
+stack
+    lang Typescript
+    runtime Bun
+    db postgres
+
+envvar#jwt-secret(default="randomUUID") // - Random default must persist between sessions
+
+disk: folder(path="/audios")
+    | Folder where .opus audio files are stored, they correlate 1-1 to rows in the audios model by the name, files inside must have {audio.id}.opus
+
+auth#user 
+    | When an endpoint needs to be authenticated as user, it receives an HTTP Authorization header bearer token with its own token
+
+include http-server.pug
