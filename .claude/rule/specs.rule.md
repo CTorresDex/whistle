@@ -48,6 +48,8 @@ app#[name](src="[path-to-app.pug]")
 
 Declares an application to build. Each app spec lives in its own folder under `apps/{name}/`.
 
+Every app is built into `lib/{name}`, and the build stays fully scoped to that folder: it contains everything the app needs to build and run — source, config and its **own Docker setup** (Dockerfile, compose, etc.) — independent from the other apps. Nothing of an app's build may live outside its `lib/{name}` folder, and per the non functional requirements it must build and run via Docker only.
+
 ## Types (`types.pug`)
 
 Types are the shared vocabulary for data shapes, referenced everywhere by name via dot qualifiers or name inference.
