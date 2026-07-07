@@ -101,12 +101,17 @@ export default function HomePage() {
       </Navbar>
 
       <ul data-testid="audio-list" className="divide-y divide-neutral-800">
-        {audios.map((audio) => (
+        {audios.map((audio, i) => (
           <li key={audio.id} data-testid={`audio-row-${audio.id}`} className="flex items-center justify-between gap-4 py-3">
             <span className="truncate text-left">{audio.title}</span>
             <button
               data-testid={`play-${audio.id}`}
-              onClick={() => player.play({ src: `/api/audio/${audio.id}.opus`, title: audio.title })}
+              onClick={() =>
+                player.play(
+                  audios.map((a) => ({ src: `/api/audio/${a.id}.opus`, title: a.title })),
+                  i,
+                )
+              }
               aria-label={`Reproducir ${audio.title}`}
               className="rounded-full p-2 text-emerald-400 hover:bg-neutral-800"
             >

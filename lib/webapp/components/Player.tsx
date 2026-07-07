@@ -14,6 +14,9 @@ import { getSession } from "@/lib/auth";
 // play-bar are shared across every page instead of each page owning its own.
 export type PlayerStatus = "playing" | "paused" | "stopped";
 
+// state.iteration_mode.enum — what happens when the current song ends.
+export type IterationMode = "cycle-playlist" | "cycle-song" | "no-cycle";
+
 // A track the player can play. `src` is the API path of the opus source, either
 // /api/audio/{id}.opus (downloaded audio) or /api/preview?url=... (youtube preview).
 export interface Track {
@@ -31,11 +34,15 @@ interface PlayerState {
   currentTime: number;
   // state.duration.time — total length of the current track
   duration: number;
-  // event#play(audio)
-  play: (track: Track) => void;
-  // event#pause()
+  // state.iteration_mode.enum(default="cycle-playlist")
+  iterationMode: IterationMode;
+  setIterationMode: (mode: IterationMode) => void;
+  // action#play(audio) — play track `index` of `playlist`; the playlist is kept so
+  // on_end can advance to the next song.
+  play: (playlist: Track[], index: number) => void;
+  // action#pause()
   pause: () => void;
-  // event#resume()
+  // action#resume()
   resume: () => void;
 }
 
@@ -57,6 +64,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const [title, setTitle] = useState("");
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [playlist, setPlaylist] = useState<Track[]>([]);
+  const [index, setIndex] = useState(0);
+  const [iterationMode, setIterationMode] = useState<IterationMode>("cycle-playlist");
 
   useEffect(() => {
     return () => {
@@ -64,13 +74,16 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // event#play(audio) — plays the provided track; if audio is already running it
-  // switches to the new one, pausing the current audio while the next one loads.
-  const play = useCallback((track: Track) => {
+  // Loads track `i` of `tracks`, pausing the current audio while the next one
+  // loads, then starts playback. Shared by play() and on_end() cycling.
+  const playIndex = useCallback((tracks: Track[], i: number) => {
     const element = audioRef.current;
-    if (!element) return;
+    if (!element || i < 0 || i >= tracks.length) return;
+    const track = tracks[i];
     const request = ++requestRef.current;
     element.pause();
+    setPlaylist(tracks);
+    setIndex(i);
     setSource(track.src);
     setTitle(track.title);
     setCurrentTime(0);
@@ -100,19 +113,52 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  // event#pause()
+  // action#play(audio) — plays the provided track; if audio is already running it
+  // switches to the new one, pausing the current audio while the next one loads.
+  const play = useCallback(
+    (tracks: Track[], i: number) => playIndex(tracks, i),
+    [playIndex],
+  );
+
+  // action#pause()
   const pause = useCallback(() => {
     audioRef.current?.pause();
   }, []);
 
-  // event#resume()
+  // action#resume()
   const resume = useCallback(() => {
     audioRef.current?.play().catch(() => setStatus("paused"));
   }, []);
 
+  // event#on_end() — triggered when a song finishes playing.
+  const onEnd = useCallback(() => {
+    if (iterationMode === "cycle-song") {
+      // repeat the same song
+      playIndex(playlist, index);
+    } else if (iterationMode === "cycle-playlist") {
+      // go to next song, wrapping to the first after the last one
+      if (playlist.length === 0) return;
+      playIndex(playlist, (index + 1) % playlist.length);
+    } else {
+      // no-cycle: stop playing, set status to "paused"
+      setStatus("paused");
+    }
+  }, [iterationMode, playlist, index, playIndex]);
+
   return (
     <PlayerContext.Provider
-      value={{ status, source, title, currentTime, duration, play, pause, resume }}
+      value={{
+        status,
+        source,
+        title,
+        currentTime,
+        duration,
+        iterationMode,
+        setIterationMode,
+        play,
+        pause,
+        resume,
+      }}
     >
       {children}
       <audio
@@ -120,6 +166,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         onPlay={() => setStatus("playing")}
         onPlaying={() => setStatus("playing")}
         onPause={() => setStatus((s) => (s === "stopped" ? s : "paused"))}
+        onEnded={onEnd}
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
         onLoadedMetadata={(e) => {
           const d = e.currentTarget.duration;

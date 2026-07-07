@@ -36,6 +36,27 @@ test("playing a search result reveals the play bar", async ({ page }) => {
   await expect(page.getByTestId("play-bar")).toContainText("jazz result 1");
 });
 
+test("when a song ends the player cycles to the next one and wraps around", async ({ page }) => {
+  await page.goto("/explore");
+  await page.getByTestId("explore-search").fill("jazz");
+  await page.getByTestId("explore-search-submit").click();
+  await expect(page.getByTestId("explore-row-0")).toBeVisible();
+
+  // play the first result; the whole result list becomes the player's playlist
+  await page.getByTestId("explore-play-0").click();
+  await expect(page.getByTestId("play-bar-title")).toHaveText("jazz result 1");
+
+  // on_end with the default cycle-playlist mode advances to the next song
+  const end = () =>
+    page.evaluate(() => document.querySelector("audio")!.dispatchEvent(new Event("ended")));
+  await end();
+  await expect(page.getByTestId("play-bar-title")).toHaveText("jazz result 2");
+
+  // ending the last song wraps back to the first
+  await end();
+  await expect(page.getByTestId("play-bar-title")).toHaveText("jazz result 1");
+});
+
 test("downloading a result shows the row progress bar and keeps it after completion", async ({ page }) => {
   await page.goto("/explore");
   await page.getByTestId("explore-search").fill("rock");

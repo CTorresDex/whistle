@@ -38,15 +38,16 @@ export function PlayBar() {
       >
         {paused ? <PlayIcon /> : <PauseIcon />}
       </button>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm">{title}</p>
-        <div className="mt-1 flex items-center gap-2">
-          <div className="h-1.5 flex-1 overflow-hidden rounded bg-neutral-800">
-            <div className="h-full bg-emerald-500" style={{ width: `${progress}%` }} />
-          </div>
+      {/* flex.vertical — title + current-time/duration on top, progress-bar below */}
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex items-center justify-between gap-2">
+          <p data-testid="play-bar-title" className="truncate text-sm">{title}</p>
           <span className="shrink-0 text-xs tabular-nums text-neutral-400">
-            {formatTime(currentTime)} / {formatTime(duration)}
+            {formatTime(currentTime)} - {formatTime(duration)}
           </span>
+        </div>
+        <div className="h-1.5 w-full overflow-hidden rounded bg-neutral-800">
+          <div className="h-full bg-emerald-500" style={{ width: `${progress}%` }} />
         </div>
       </div>
     </div>

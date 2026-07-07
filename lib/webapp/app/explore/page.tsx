@@ -154,7 +154,15 @@ export default function ExplorePage() {
               <div className="flex items-center gap-1">
                 <button
                   data-testid={`explore-play-${index}`}
-                  onClick={() => player.play({ src: `/api/preview?url=${encodeURIComponent(video.url)}`, title: video.title })}
+                  onClick={() =>
+                    player.play(
+                      videos.map((v) => ({
+                        src: `/api/preview?url=${encodeURIComponent(v.url)}`,
+                        title: v.title,
+                      })),
+                      index,
+                    )
+                  }
                   aria-label={`Reproducir ${video.title}`}
                   className="rounded-full p-2 text-emerald-400 hover:bg-neutral-800"
                 >
