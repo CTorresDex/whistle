@@ -39,3 +39,9 @@ type#youtube-search
     url.youtube-url
     duration.duration
     thumbnail.url.optional
+
+type#time
+    | Represents the time, not in a day so hours are not capped at 24
+    hours.uint
+    minutes.uint(max=59)
+    seconds.uint(max=59)

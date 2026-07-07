@@ -1,0 +1,33 @@
+service#player
+    | Abstract service that centralizes the music player
+    state
+        status.enum(default="stopped")
+            | playing | paused | stopped
+        source.url
+            | Source that is being played, normally /audio/{id}.opus or /preview?url=...
+        current-time.time
+            | Current time that the player is playing
+        duration.time
+            | Total duration of the current track
+        iteration_mode.enum(default="cycle-playlist")
+            | cycle-playlist | cycle-song | no-cycle
+    
+    action#play(audio)
+        | Plays the provided audio, if an audio is currently running, switch the audio to that
+    
+    action#pause()
+        | Pauses the playing audio
+
+    action#resume()
+        | Resumes the paused audio
+
+    event#on_end()
+        | Triggers when a song finishes playing
+        if iteration_mode == "cycle-playlist"
+            | Go to next song, if this is the last song go to the first one
+        else if iteration_mode == "cycle-song"
+            | Repeat the same song
+        else if iteration_mode == "no-cycle"
+            | Stop playing, set status to "paused"
+
+    

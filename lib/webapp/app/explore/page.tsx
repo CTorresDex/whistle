@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { clearSession, getSession, type Session } from "@/lib/auth";
 import type { Video } from "@/lib/types";
 import { Navbar } from "@/components/Navbar";
-import { PlayBar } from "@/components/PlayBar";
+import { usePlayer } from "@/components/Player";
 import { DownloadIcon, PlayIcon, SearchIcon } from "@/components/icons";
 
 interface DownloadState {
@@ -16,11 +16,11 @@ interface DownloadState {
 
 export default function ExplorePage() {
   const router = useRouter();
+  const player = usePlayer();
   const [session, setSession] = useState<Session | null>(null);
   const [query, setQuery] = useState("");
   const [videos, setVideos] = useState<Video[]>([]);
   const [searching, setSearching] = useState(false);
-  const [playing, setPlaying] = useState<Video | null>(null);
   // keyed by video url — the row progress bar stays visible after completion
   const [downloads, setDownloads] = useState<Record<string, DownloadState>>({});
 
@@ -154,7 +154,7 @@ export default function ExplorePage() {
               <div className="flex items-center gap-1">
                 <button
                   data-testid={`explore-play-${index}`}
-                  onClick={() => setPlaying(video)}
+                  onClick={() => player.play({ src: `/api/preview?url=${encodeURIComponent(video.url)}`, title: video.title })}
                   aria-label={`Reproducir ${video.title}`}
                   className="rounded-full p-2 text-emerald-400 hover:bg-neutral-800"
                 >
@@ -188,12 +188,6 @@ export default function ExplorePage() {
           Busca un video para empezar a escuchar
         </p>
       )}
-
-      <PlayBar
-        src={playing ? `/api/preview?url=${encodeURIComponent(playing.url)}` : null}
-        title={playing?.title ?? ""}
-        token={session.token}
-      />
     </main>
   );
 }

@@ -6,18 +6,18 @@ import { clearSession, getSession, type Session } from "@/lib/auth";
 import type { Audio } from "@/lib/types";
 import { DownloadModal } from "@/components/DownloadModal";
 import { Navbar } from "@/components/Navbar";
-import { PlayBar } from "@/components/PlayBar";
+import { usePlayer } from "@/components/Player";
 import { PlayIcon, UploadIcon } from "@/components/icons";
 
 const LIMIT = 20;
 
 export default function HomePage() {
   const router = useRouter();
+  const player = usePlayer();
   const [session, setSession] = useState<Session | null>(null);
   const [audios, setAudios] = useState<Audio[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [playing, setPlaying] = useState<Audio | null>(null);
   const loadingRef = useRef(false);
   const audiosRef = useRef<Audio[]>([]);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -106,7 +106,7 @@ export default function HomePage() {
             <span className="truncate text-left">{audio.title}</span>
             <button
               data-testid={`play-${audio.id}`}
-              onClick={() => setPlaying(audio)}
+              onClick={() => player.play({ src: `/api/audio/${audio.id}.opus`, title: audio.title })}
               aria-label={`Reproducir ${audio.title}`}
               className="rounded-full p-2 text-emerald-400 hover:bg-neutral-800"
             >
@@ -125,11 +125,6 @@ export default function HomePage() {
         token={session.token}
         onClose={() => setModalOpen(false)}
         onComplete={() => void refresh()}
-      />
-      <PlayBar
-        src={playing ? `/api/audio/${playing.id}.opus` : null}
-        title={playing?.title ?? ""}
-        token={session.token}
       />
     </main>
   );

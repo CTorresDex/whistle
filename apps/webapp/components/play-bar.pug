@@ -1,7 +1,19 @@
-play-bar.hidden
-    progress-bar
+include ../services/player.pug
+
+play-bar
+    | Play bar fixed at the bottom, hidden if  `player.status == stopped`
+    flex.horizontal
+        if player.status == "paused"
+            button(icon="play", (click)=player.resume())
+        else
+            button(icon="pause", (click)=player.pause())
+        
+        flex.vertical
+            .top
+                .left
+                    title {player.title}
+                .right
+                    span {player.current-time} - {player.duration}
+            .bottom
+                progress-bar
     
-    if paused
-        button(icon="play")
-    else
-        button(icon="pause")

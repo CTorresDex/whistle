@@ -1,7 +1,8 @@
+include ../services/player
 include ../components/play-bar.pug
 
 navbar
-    .align-left
+    .left
         include ../components/navbar-items
     .center
         form(endpoint="explore")
@@ -15,17 +16,16 @@ list
             | The row will have a hidden progress download bar that will look exactly like a 2px border bottom
             | this progress bar wont change the row size, only make visible the progress.
             | After the download is complete, the bar must remain visible
-            .align-left
+            .left
                 img {video.thumbnail}
                 title {video.title}
-            .align-right
-                button(icon="play", click="action::play(video.url)")
+            .right
+                button(icon="play", click="player.play(video)")
+                    | To play, use the /preview endpoint as source, pauses the current audio while loading the next one
                 button(icon="download", click="action::download(video.url)")
                     | Disabled when the download is in progress
 
 
-action#play(args=["url"])
-    | Stream play the audio from the /preview endpoint and makes the play-bar visible
 
 action#download(args=["url"])
     | Calls the /download endpoint with the provided url and displays the progress bar in the downloading row

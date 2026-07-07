@@ -1,17 +1,18 @@
+include ../services/player
 include ../components/play-bar.pug
 
 navbar
-    .align-left
+    .left
         include ../components/navbar-items
-    .align-right
+    .right
         button(click="download-modal::open")
 
 list(endpoint="/list")
     | Infinite scroll that fetches existing audios
     each audio in audios
         row
-            title.align-left  {audio.title}
-            title.align-right: button(icon="play", click="action::play()")
+            title.left  {audio.title}
+            title.right: button(icon="play", (click)="player.play(audio)")
 
 modal#download-modal
     | Inputs and buttons are disabled while downloading
@@ -24,6 +25,3 @@ modal#download-modal
         button(icon="upload") Subir
     
     progress-bar
-
-action#play(args=["audio_id"])
-    | Stream play the audio from the /audio/{audio_id}.opus endpoint and makes the play-bar visible
