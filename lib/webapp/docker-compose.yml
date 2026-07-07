@@ -1,0 +1,10 @@
+services:
+  webapp:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      # URL of the audio-station server, as reachable from inside this container
+      API_URL: ${API_URL:-http://host.docker.internal:8080}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

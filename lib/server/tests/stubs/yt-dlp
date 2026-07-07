@@ -1,0 +1,33 @@
+#!/bin/sh
+# yt-dlp stub used by the isolated test environments (no network, deterministic).
+# URLs containing "notfound" behave as an unresolvable video.
+
+for last in "$@"; do :; done
+url="$last"
+
+case "$url" in
+  *notfound*)
+    echo "ERROR: [youtube] Video unavailable" >&2
+    exit 1
+    ;;
+esac
+
+if [ "$1" = "-J" ]; then
+  printf '{"title":"Stub Video"}\n'
+  exit 0
+fi
+
+# download mode: locate the -o output template and materialize the opus file
+out=""
+prev=""
+for arg in "$@"; do
+  if [ "$prev" = "-o" ]; then out="$arg"; fi
+  prev="$arg"
+done
+out=$(printf '%s' "$out" | sed 's/%(ext)s/opus/')
+
+echo "[download]   0.0% of 1.00MiB at 1.00MiB/s ETA 00:02"
+echo "[download]  50.0% of 1.00MiB at 1.00MiB/s ETA 00:01"
+echo "[download] 100.0% of 1.00MiB at 1.00MiB/s ETA 00:00"
+printf 'stub-opus-data' > "$out"
+exit 0

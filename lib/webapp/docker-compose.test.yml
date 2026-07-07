@@ -1,0 +1,61 @@
+# Isolated UI-test environment: real webapp + real server + postgres, with
+# yt-dlp stubbed. Never touches dev/prod volumes.
+# Run: docker compose -p audio-station-webapp-test -f docker-compose.test.yml run --rm ui-tests
+services:
+  db-test:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  server-test:
+    build: ../server
+    environment:
+      DATABASE_URL: postgres://test:test@db-test:5432/test
+      JWT_SECRET: test-secret
+      YTDLP_BIN: /stubs/yt-dlp
+    volumes:
+      - ../server/tests/stubs:/stubs:ro
+    depends_on:
+      db-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  webapp-test:
+    build: .
+    environment:
+      API_URL: http://server-test:8080
+    depends_on:
+      server-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3000/login"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  ui-tests:
+    image: mcr.microsoft.com/playwright:v1.53.0-noble
+    working_dir: /suite
+    volumes:
+      - ./tests:/suite
+      - /suite/node_modules
+    environment:
+      BASE_URL: http://webapp-test:3000
+      CI: "1"
+    command: ["bash", "-lc", "npm install --no-audit --no-fund && npx playwright test"]
+    depends_on:
+      webapp-test:
+        condition: service_healthy

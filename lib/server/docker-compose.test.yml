@@ -1,0 +1,42 @@
+# Isolated test environment — never reuses dev/prod volumes or network.
+# Run: docker compose -p audio-station-server-test -f docker-compose.test.yml run --rm tests
+services:
+  db-test:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  server-test:
+    build: .
+    environment:
+      DATABASE_URL: postgres://test:test@db-test:5432/test
+      JWT_SECRET: test-secret
+      YTDLP_BIN: /stubs/yt-dlp
+    volumes:
+      - ./tests/stubs:/stubs:ro
+    depends_on:
+      db-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  tests:
+    build: .
+    command: ["bun", "test", "tests/unit", "tests/integration"]
+    environment:
+      SERVER_URL: http://server-test:8080
+    depends_on:
+      server-test:
+        condition: service_healthy
