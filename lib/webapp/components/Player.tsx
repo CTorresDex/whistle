@@ -44,6 +44,10 @@ interface PlayerState {
   pause: () => void;
   // action#resume()
   resume: () => void;
+  // service#playlist action#next() — moves to the next song, wrapping to the first
+  next: () => void;
+  // service#playlist action#previous() — moves to the previous song, wrapping to the last
+  previous: () => void;
 }
 
 const PlayerContext = createContext<PlayerState | null>(null);
@@ -130,6 +134,18 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     audioRef.current?.play().catch(() => setStatus("paused"));
   }, []);
 
+  // service#playlist action#next() — moves to the next song, wrapping to the first
+  const next = useCallback(() => {
+    if (playlist.length === 0) return;
+    playIndex(playlist, (index + 1) % playlist.length);
+  }, [playlist, index, playIndex]);
+
+  // service#playlist action#previous() — moves to the previous song, wrapping to the last
+  const previous = useCallback(() => {
+    if (playlist.length === 0) return;
+    playIndex(playlist, (index - 1 + playlist.length) % playlist.length);
+  }, [playlist, index, playIndex]);
+
   // event#on_end() — triggered when a song finishes playing.
   const onEnd = useCallback(() => {
     if (iterationMode === "cycle-song") {
@@ -158,6 +174,8 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         play,
         pause,
         resume,
+        next,
+        previous,
       }}
     >
       {children}

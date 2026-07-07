@@ -1,0 +1,12 @@
+service#playlist
+    | Service that holds information about the current playlist
+    state
+        prev.url Reference to previous song
+        current.url Reference to current song
+        next.url Reference to next song
+
+    action#next()
+        | Moves to next song and update references
+
+    action#previous()
+        | Moves to previous song and update references

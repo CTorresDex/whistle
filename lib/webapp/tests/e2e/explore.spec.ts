@@ -57,6 +57,31 @@ test("when a song ends the player cycles to the next one and wraps around", asyn
   await expect(page.getByTestId("play-bar-title")).toHaveText("jazz result 1");
 });
 
+test("previous/next buttons navigate the playlist and wrap around", async ({ page }) => {
+  await page.goto("/explore");
+  await page.getByTestId("explore-search").fill("jazz");
+  await page.getByTestId("explore-search-submit").click();
+  await expect(page.getByTestId("explore-row-0")).toBeVisible();
+
+  // play the first result; the whole result list becomes the player's playlist
+  await page.getByTestId("explore-play-0").click();
+  await expect(page.getByTestId("play-bar-title")).toHaveText("jazz result 1");
+
+  await page.getByTestId("play-next").click();
+  await expect(page.getByTestId("play-bar-title")).toHaveText("jazz result 2");
+
+  // next wraps back to the first from the last song
+  await page.getByTestId("play-next").click();
+  await expect(page.getByTestId("play-bar-title")).toHaveText("jazz result 1");
+
+  // previous wraps back to the last song from the first
+  await page.getByTestId("play-previous").click();
+  await expect(page.getByTestId("play-bar-title")).toHaveText("jazz result 2");
+
+  await page.getByTestId("play-previous").click();
+  await expect(page.getByTestId("play-bar-title")).toHaveText("jazz result 1");
+});
+
 test("downloading a result shows the row progress bar and keeps it after completion", async ({ page }) => {
   await page.goto("/explore");
   await page.getByTestId("explore-search").fill("rock");

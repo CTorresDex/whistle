@@ -24,6 +24,22 @@ export function UploadIcon() {
   );
 }
 
+export function PreviousIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className={base} aria-hidden>
+      <path d="M6 5h2v14H6zM19 5v14l-11-7z" />
+    </svg>
+  );
+}
+
+export function NextIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className={base} aria-hidden>
+      <path d="M16 5h2v14h-2zM5 5v14l11-7z" />
+    </svg>
+  );
+}
+
 export function DownloadIcon() {
   return (
     <svg viewBox="0 0 24 24" className={base} aria-hidden>

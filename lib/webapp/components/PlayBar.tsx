@@ -1,6 +1,6 @@
 "use client";
 
-import { PauseIcon, PlayIcon } from "./icons";
+import { NextIcon, PauseIcon, PlayIcon, PreviousIcon } from "./icons";
 import { usePlayer } from "./Player";
 
 // type#time — hours are not capped at 24. Rendered as H:MM:SS, or M:SS when
@@ -16,9 +16,10 @@ function formatTime(totalSeconds: number): string {
 }
 
 // play-bar — fixed at the bottom, hidden while player.status == stopped; streams
-// the shared player source and shows progress plus a play/pause toggle.
+// the shared player source and shows previous/play-pause/next controls, the
+// title and time, and a progress bar, stacked vertically.
 export function PlayBar() {
-  const { status, title, currentTime, duration, pause, resume } = usePlayer();
+  const { status, title, currentTime, duration, pause, resume, next, previous } = usePlayer();
 
   if (status === "stopped") return null;
 
@@ -28,27 +29,42 @@ export function PlayBar() {
   return (
     <div
       data-testid="play-bar"
-      className="fixed inset-x-0 bottom-0 flex items-center gap-4 border-t border-neutral-800 bg-neutral-900 px-6 py-3"
+      className="fixed inset-x-0 bottom-0 flex flex-col gap-2 border-t border-neutral-800 bg-neutral-900 px-6 py-3"
     >
-      <button
-        data-testid="toggle-play"
-        onClick={paused ? resume : pause}
-        aria-label={paused ? "Reproducir" : "Pausar"}
-        className="rounded-full bg-emerald-600 p-2 hover:bg-emerald-500"
-      >
-        {paused ? <PlayIcon /> : <PauseIcon />}
-      </button>
-      {/* flex.vertical — title + current-time/duration on top, progress-bar below */}
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex items-center justify-between gap-2">
-          <p data-testid="play-bar-title" className="truncate text-sm">{title}</p>
-          <span className="shrink-0 text-xs tabular-nums text-neutral-400">
-            {formatTime(currentTime)} - {formatTime(duration)}
-          </span>
-        </div>
-        <div className="h-1.5 w-full overflow-hidden rounded bg-neutral-800">
-          <div className="h-full bg-emerald-500" style={{ width: `${progress}%` }} />
-        </div>
+      <div className="flex items-center justify-center gap-3">
+        <button
+          data-testid="play-previous"
+          onClick={previous}
+          aria-label="Anterior"
+          className="rounded-full p-2 text-neutral-300 hover:bg-neutral-800"
+        >
+          <PreviousIcon />
+        </button>
+        <button
+          data-testid="toggle-play"
+          onClick={paused ? resume : pause}
+          aria-label={paused ? "Reproducir" : "Pausar"}
+          className="rounded-full bg-emerald-600 p-2 hover:bg-emerald-500"
+        >
+          {paused ? <PlayIcon /> : <PauseIcon />}
+        </button>
+        <button
+          data-testid="play-next"
+          onClick={next}
+          aria-label="Siguiente"
+          className="rounded-full p-2 text-neutral-300 hover:bg-neutral-800"
+        >
+          <NextIcon />
+        </button>
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <p data-testid="play-bar-title" className="truncate text-sm">{title}</p>
+        <span className="shrink-0 text-xs tabular-nums text-neutral-400">
+          {formatTime(currentTime)} - {formatTime(duration)}
+        </span>
+      </div>
+      <div className="h-1.5 w-full overflow-hidden rounded bg-neutral-800">
+        <div className="h-full bg-emerald-500" style={{ width: `${progress}%` }} />
       </div>
     </div>
   );
