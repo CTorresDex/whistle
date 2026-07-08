@@ -40,6 +40,11 @@ dependencies:
 
   # Persists the logged-in session (token) across app launches.
   shared_preferences: ^2.3.2
+  just_audio: ^0.10.6
+  just_audio_background: ^0.0.1-beta.17
+  sqflite: ^2.4.3
+  path_provider: ^2.1.6
+  path: ^1.9.1
 
 dev_dependencies:
   flutter_test:

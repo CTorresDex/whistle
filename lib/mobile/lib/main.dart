@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 
 import 'screens/landing_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Enables background playback + a media notification for just_audio.
+  await JustAudioBackground.init(
+    androidNotificationChannelId:
+        'com.audiostation.audio_station_mobile.channel.audio',
+    androidNotificationChannelName: 'Audio Station',
+    androidNotificationOngoing: true,
+  );
   runApp(const AudioStationApp());
 }
 

@@ -1,0 +1,61 @@
+include ../services/player.pug
+include ../classes/playlist.pug
+include ../storage.pug
+
+state
+    playlist.playlist.optional
+    audio-cache.map
+
+#search-section.flex.horizontal
+    state
+        searching.bool
+    input#search-bar.floating.max-width(icon="search", placeholder="¿Qué quieres escuchar?")
+        event#focus
+            | Opens the keyboard
+            - @searching = true
+        event#blur: - 
+            | Closes the keyboard
+            - @searching = false
+        event#search
+            | Searches the term and creates a temporary memory playlist
+            - @playlist = toPlaylist(call("/explore", @value))
+            - @searching = false
+        
+#list.flex.vertical
+    each audio in playlist
+        row.flex.horizontal
+            | The row will have a hidden progress download bar that will look exactly like a 2px border bottom
+            | this progress bar wont change the row size, only make visible the progress.
+            | After the download is complete, the bar must remain visible
+            thumbnail {audio.thumbnail}
+            .flex.vertical
+                title {audio.title}
+                duration {audio.duration}
+            actions.flex.horizontal
+                button(icon="play")
+                    | Downloads in the audio cache the audio and plays it
+                    | Progress bar is updated normally
+                if !audios.exists(audio.referenceId)
+                    button(icon="download")
+                        | Downloads in the persistent storage the audio
+                        | if the audio is already in the cache, just copy it from there
+
+play-bar
+    | Play bar fixed at the bottom, hidden if  `player.status == stopped`
+    flex.vertical
+        .buttons
+            button(icon="previous", (click)=playlist.previous())
+            if player.status == "paused"
+                button(icon="play", (click)=player.resume())
+            else
+                button(icon="pause", (click)=player.pause())
+            button(icon="next", (click)=playlist.next())
+        
+        labels
+            .left
+                title {player.title}
+            .right
+                span {player.current-time} - {player.duration}
+        .bottom
+            progress-bar
+    

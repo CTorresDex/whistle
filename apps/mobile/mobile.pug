@@ -3,25 +3,5 @@ stack
     engine Flutter
     framework Google Material UI
 
-view#landing(route="/")
-    if isUserLoggedIn
-        - redirect("/home")
-    else
-        - redirect("/login")
-
-view#login
-    form(endpoint="/login")
-        input#username
-        input#password
-        button.submit Iniciar sesión
-    
-    span(redirect-to="/signup") ¿No tienes cuenta? Registrate
-
-view#signup
-    form(endpoint="/signup")
-        input#username
-        input#password
-        button.submit Registrarme
-
-view#home
-    | Empty page with a "Coming Soon" message
+include ./storage.pug
+include ./views.pug

@@ -1,5 +1,7 @@
 package com.audiostation.audio_station_mobile
 
-import io.flutter.embedding.android.FlutterActivity
+import com.ryanheise.audioservice.AudioServiceActivity
 
-class MainActivity : FlutterActivity()
+// Extends AudioServiceActivity so media-button intents reach the background
+// audio service used by just_audio_background.
+class MainActivity : AudioServiceActivity()

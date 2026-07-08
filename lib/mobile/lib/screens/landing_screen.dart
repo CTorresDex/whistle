@@ -27,8 +27,9 @@ class _LandingScreenState extends State<LandingScreen> {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) =>
-            session != null ? const HomeScreen() : const LoginScreen(),
+        builder: (_) => session != null
+            ? HomeScreen(session: session)
+            : const LoginScreen(),
       ),
     );
   }

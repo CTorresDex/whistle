@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
       await _store.save(session);
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => HomeScreen(session: session)),
       );
     } catch (error) {
       if (!mounted) return;

@@ -1,0 +1,41 @@
+include ../services/playlist.pug
+
+service#player
+    | Centralized service that control the reproduction of audios
+    | The audio must keep playing even when the app is in background
+    state
+        status.player-status
+        playlist.optional
+        song-index.uint
+        current-time.time
+        duration.time
+        iteration-mode.iteration-mode
+
+    
+    action#play(audio)
+        | Plays the provided audio, if an audio is currently running, switches the audio to that
+
+    action#pause()
+        | Pauses the playing audio
+    
+    action#resume()
+        | Resumes the paused audio
+
+    event#on_end()
+        | Triggers when a song finishes playing
+        if iteration-mode == "cycle-playlist"
+            | Go to next song, if this is the last song go to the first one
+        else if iteration-mode == "repeat-song"
+            | Repeat the same song
+        else if iteration-mode == "no-repeat"
+            | Stop playing, set status to "paused" and the time to 00:00
+
+enum#player-status
+    stopped.default
+    playing
+    paused
+
+enum#iteration-mode
+    cycle-playlist.default
+    repeat-song
+    no-repeat
