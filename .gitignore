@@ -2,3 +2,4 @@ builds/
 repositories/
 .local
 .playwright-mcp
+.env
