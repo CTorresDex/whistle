@@ -8,6 +8,11 @@
         "--viewport-size=1440x900",
         "--user-data-dir=.local/playwright-profile"
       ]
+    },
+
+    "mobile-mcp": {
+      "command": "bunx",
+      "args": ["-y", "@mobilenext/mobile-mcp@latest"]
     }
   }
 }

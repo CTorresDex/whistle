@@ -1,0 +1,38 @@
+# Isolated UI-test backend for the mobile app: real server + postgres, with
+# yt-dlp stubbed. The server is exposed on host port 8091 (dev uses 8080) so an
+# iOS simulator / Android emulator can reach it at the machine's localhost.
+# Never touches dev/prod volumes.
+# Run: docker compose -p audio-station-mobile-test -f docker-compose.test.yml up -d --build server-test
+services:
+  db-test:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  server-test:
+    build: ../server
+    ports:
+      - "8091:8080"
+    environment:
+      DATABASE_URL: postgres://test:test@db-test:5432/test
+      JWT_SECRET: test-secret
+      YTDLP_BIN: /stubs/yt-dlp
+    volumes:
+      - ../server/tests/stubs:/stubs:ro
+    depends_on:
+      db-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
