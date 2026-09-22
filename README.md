@@ -1,6 +1,6 @@
 # Whistle
 
-*The YouTube Premium nobody can refuse to sell me.*
+*YouTube didn't let me pay for my Premium account, so I built my own alternative until it lets me pay for it.*
 
 A self-hosted server, web app and Flutter mobile app to search YouTube, save the audio of a video to your own library and play it back.
 
