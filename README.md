@@ -1,5 +1,7 @@
 # Whistle
 
+*The YouTube Premium nobody can refuse to sell me.*
+
 A self-hosted server, web app and Flutter mobile app to search YouTube, save the audio of a video to your own library and play it back.
 
 ```mermaid
