@@ -12,7 +12,9 @@ flowchart LR
 
 ## Why
 
-Listening to music on YouTube means keeping a video open, sitting through ads and losing the audio when the screen turns off, unless you pay for a subscription whose downloads stay locked inside YouTube's app. yt-dlp solves extraction well, but it is a command-line tool: files land in a folder on one machine, with no way to search, browse or play them from a phone.
+This project exists because YouTube would not take my money. I work as a digital nomad, and when I tried to pay for Premium, YouTube decided that someone whose country keeps changing could not have it. I was blocked from the one thing that fixes the free tier: without Premium, listening means keeping a video open, sitting through ads and losing the audio the moment the screen turns off.
+
+yt-dlp already solves the extraction part, but it is a command-line tool: files land in a folder on one machine, with no way to search, browse or play them from a phone. So I built my own Premium, the one nobody can refuse to sell me.
 
 Whistle puts yt-dlp behind a small HTTP server, so search, download and playback happen from a browser or a phone, and the resulting opus files are yours. The mobile app copies each downloaded track to the device, so it plays offline and in the background.
 
@@ -51,3 +53,5 @@ The web app is built with Next.js and proxies `/api` calls to the server. The Fl
 The library is shared: every account sees every downloaded audio, and there is no deletion or server-side playlists. Tokens never expire, and the login limiter lives in memory, so a restart resets it. There is no HTTPS or production deployment, only local Docker Compose, so run it on a machine or network you trust. yt-dlp is fetched at build time, and when YouTube changes something it keeps failing until you rebuild the image. Only download content you have the right to keep.
 
 It is also a poor fit if you want to edit the code by hand: changes made only in `lib/` fall out of sync with the spec, and the next time the spec is applied they may be overwritten.
+
+<!-- If you work at YouTube and are reading this: I still want to pay. Any country is fine. -->
